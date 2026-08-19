@@ -27,6 +27,7 @@ export default function Home() {
   const [language, setLanguage] = useState<LanguageCode>("fr");
   const [mode, setMode] = useState<"live" | "upload">("upload");
   const [isListening, setIsListening] = useState(false);
+  const heroRef = useRef<HTMLDivElement | null>(null);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState("");
   const [isTranscribingFile, setIsTranscribingFile] = useState(false);
@@ -205,6 +206,26 @@ export default function Home() {
           Near real-time transcription and AI-generated reports in French, Arabic, and
           English — powered by {transcribeModel || "Whisper large-v3"} and {reportModel || "the configured report model"} on Groq.
         </p>
+        <div className="heroButtons">
+          <button
+            className="ctaBtn"
+            onClick={() => {
+              setMode("live");
+              startListening();
+            }}
+          >
+            Start Live
+          </button>
+          <button
+            className="ctaBtn secondaryCta"
+            onClick={() => {
+              setMode("upload");
+              fileInputRef.current?.click();
+            }}
+          >
+            Upload Audio
+          </button>
+        </div>
       </header>
 
       <section className="panel">
