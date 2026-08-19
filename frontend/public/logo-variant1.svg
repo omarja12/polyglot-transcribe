@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="48" viewBox="0 0 160 48" fill="none">
+  <defs>
+    <linearGradient id="gv1" x1="0" x2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+  <!-- Monogram mark -->
+  <rect width="48" height="48" rx="10" fill="url(#gv1)"/>
+  <text x="26" y="32" font-family="Inter, sans-serif" font-size="20" font-weight="700" text-anchor="middle" fill="#fff">PT</text>
+  <!-- Wordmark -->
+  <text x="64" y="20" font-family="Inter, sans-serif" font-size="16" font-weight="700" fill="#0b1020">Polyglot</text>
+  <text x="64" y="36" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#475569">Transcribe</text>
+</svg>
