@@ -33,12 +33,14 @@ export async function transcribeChunk(
 export async function transcribeFile(
   file: File,
   language: string,
-  clientId: string
+  clientId: string,
+  preprocess: boolean = true
 ): Promise<string> {
   const form = new FormData();
   form.append("file", file);
   form.append("language", language);
   form.append("client_id", clientId);
+  form.append("preprocess", String(preprocess));
 
   const res = await fetch(`${API_URL}/transcribe/file`, {
     method: "POST",

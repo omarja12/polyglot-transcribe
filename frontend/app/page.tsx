@@ -40,6 +40,7 @@ export default function Home() {
   const [usage, setUsage] = useState<UsageInfo | null>(null);
   const [reportModel, setReportModel] = useState<string | null>(null);
   const [transcribeModel, setTranscribeModel] = useState<string | null>(null);
+  const [preprocessEnabled, setPreprocessEnabled] = useState<boolean>(true);
 
   const clientIdRef = useRef<string>("");
   if (!clientIdRef.current && typeof window !== "undefined") {
@@ -154,7 +155,7 @@ export default function Home() {
     setIsTranscribingFile(true);
     setError("");
     try {
-      const text = await transcribeFile(file, language, clientIdRef.current);
+      const text = await transcribeFile(file, language, clientIdRef.current, preprocessEnabled);
       setTranscript(text);
       refreshUsage();
     } catch (err) {
@@ -338,6 +339,11 @@ export default function Home() {
             </div>
 
             <div className="uploadActions">
+              <label style={{display:'inline-flex', alignItems:'center', gap:8, marginRight:12}}>
+                <input type="checkbox" checked={preprocessEnabled} onChange={(e)=>setPreprocessEnabled(e.target.checked)} />
+                <span style={{fontSize:13}}>Preprocess (denoise)</span>
+              </label>
+
               <button
                 className="primaryBtn"
                 disabled={!fileInfo || isTranscribingFile}

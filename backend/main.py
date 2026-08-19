@@ -158,6 +158,24 @@ def _preprocess_audio_bytes(audio_bytes: bytes, filename: str) -> bytes:
         return audio_bytes
 
 
+def _is_valid_wav(wav_bytes: bytes) -> bool:
+    """Attempt to validate WAV bytes by opening them with the standard wave module.
+    Returns True if the bytes appear to be a valid WAV file and contain at least one frame.
+    """
+    import io
+    import wave
+
+    try:
+        if not wav_bytes or len(wav_bytes) < 44:
+            return False
+        bio = io.BytesIO(wav_bytes)
+        with wave.open(bio, "rb") as wf:
+            frames = wf.getnframes()
+            return frames > 0
+    except Exception:
+        return False
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -238,8 +256,13 @@ async def transcribe_file(
     file: UploadFile = File(...),
     language: Optional[str] = Form(None),
     client_id: str = Form("anonymous"),
+    preprocess: bool = Form(True),
 ):
-    """Transcribes a full uploaded audio file in one shot."""
+    """Transcribes a full uploaded audio file in one shot.
+
+    The `preprocess` form flag controls whether server-side denoising/resampling is run
+    before sending audio to the transcription model. Defaults to True for backwards compatibility.
+    """
     audio_bytes = await file.read()
     size_mb = len(audio_bytes) / (1024 * 1024)
     if size_mb > MAX_UPLOAD_MB:
@@ -249,8 +272,10 @@ async def transcribe_file(
     estimated_minutes = max(0.5, size_mb)
     _check_and_record_usage(client_id, seconds=estimated_minutes * 60)
 
-    # Attempt server-side preprocessing to improve accuracy on noisy uploads
-    processed_bytes = _preprocess_audio_bytes(audio_bytes, file.filename or "audio.mp3")
+    if preprocess:
+        processed_bytes = _preprocess_audio_bytes(audio_bytes, file.filename or "audio.mp3")
+    else:
+        processed_bytes = audio_bytes
 
     try:
         text = _transcribe_bytes(processed_bytes, file.filename or "audio.mp3", language)
@@ -263,6 +288,59 @@ async def transcribe_file(
             raise HTTPException(status_code=502, detail=f"Transcription failed: {exc2}") from exc2
 
     return {"text": text}
+
+
+@app.post('/preprocess')
+async def preprocess_file(file: UploadFile = File(...)):
+    """Returns a preprocessed WAV (16k mono) for a submitted audio file. Useful for downloading
+    the cleaned example audio for the repo or inspection. Validates the processed output and
+    returns an error if the preprocessed bytes do not form a valid WAV file.
+    """
+    audio_bytes = await file.read()
+    processed = _preprocess_audio_bytes(audio_bytes, file.filename or 'uploaded')
+
+    # Validate processed bytes look like a WAV file
+    if not _is_valid_wav(processed):
+        raise HTTPException(status_code=400, detail="Preprocessed output is not a valid WAV file.")
+
+    # Return as WAV
+    from fastapi.responses import Response
+
+    return Response(content=processed, media_type='audio/wav')
+
+
+@app.post('/preprocess/save')
+async def preprocess_and_save(file: UploadFile = File(...), filename: Optional[str] = Form(None)):
+    """Runs preprocessing, validates the output, and saves a cleaned WAV into frontend/public/examples.
+    Returns the relative URL path where the file can be accessed when the frontend is deployed.
+
+    This prevents invalid/corrupted preprocessed outputs from being written into the public examples
+    directory by verifying the WAV with the standard wave module before saving.
+    """
+    audio_bytes = await file.read()
+    processed = _preprocess_audio_bytes(audio_bytes, file.filename or 'uploaded')
+
+    if not _is_valid_wav(processed):
+        raise HTTPException(status_code=400, detail="Preprocessed output is not a valid WAV file and was not saved.")
+
+    # Determine safe filename
+    safe_name = (filename or Path(file.filename or "uploaded").stem + "_preprocessed.wav").replace(" ", "_")
+    # Keep only safe characters
+    safe_name = re.sub(r"[^A-Za-z0-9._-]", "", safe_name)
+    if not safe_name.lower().endswith('.wav'):
+        safe_name = safe_name + '.wav'
+
+    examples_dir = Path(__file__).resolve().parent.parent / 'frontend' / 'public' / 'examples'
+    examples_dir.mkdir(parents=True, exist_ok=True)
+    out_path = examples_dir / safe_name
+
+    with open(out_path, 'wb') as f:
+        f.write(processed)
+
+    # Return the public-facing path (frontend serves files under /)
+    public_path = f"/examples/{safe_name}"
+    return {"saved": str(out_path), "public_path": public_path}
+
 
 
 class ReportRequest(BaseModel):
@@ -353,16 +431,3 @@ def get_usage(client_id: str):
         "limit_minutes": DAILY_USAGE_LIMIT_SECONDS / 60,
         "remaining_minutes": round(max(0, DAILY_USAGE_LIMIT_SECONDS - used_seconds) / 60, 2),
     }
-
-
-@app.post('/preprocess')
-async def preprocess_file(file: UploadFile = File(...)):
-    """Returns a preprocessed WAV (16k mono) for a submitted audio file. Useful for downloading
-    the cleaned example audio for the repo or inspection.
-    """
-    audio_bytes = await file.read()
-    processed = _preprocess_audio_bytes(audio_bytes, file.filename or 'uploaded')
-    # Return as WAV
-    from fastapi.responses import Response
-
-    return Response(content=processed, media_type='audio/wav')
