@@ -50,9 +50,13 @@ An example preprocessed audio file is included in the repo for demo and testing:
 
 ---
 
-Project description shown on GitHub: "Polyglot Transcribe — near real-time multilingual speech-to-text and AI-generated reports (French, Arabic, English)."
+Project description shown on GitHub: "Polyglot Transcribe — near real-time multilingual speech-to-text with AI-generated structured reports (French, Arabic, English)."
 
-Note: To set the repository description and homepage on GitHub (so it appears in the repo header), either edit them in the web UI (top-right of the repo page) or run locally with the GitHub CLI:
+To set this on GitHub (locally while authenticated) run this command:
+
+  gh repo edit --description "Polyglot Transcribe — near real-time multilingual speech-to-text with AI-generated structured reports (French, Arabic, English)." --homepage "https://github.com/omarja12/polyglot-transcribe"
+
+Or edit the repository description directly in the GitHub web UI (top of the repo page). I can't set the repo metadata from this environment without your authentication, so use the command above on your machine if you want to apply it immediately.
 
   gh repo edit --description "Polyglot Transcribe — near real-time multilingual speech-to-text and AI-generated reports (French, Arabic, English)." --homepage "https://github.com/omarja12/polyglot-transcribe"
 
