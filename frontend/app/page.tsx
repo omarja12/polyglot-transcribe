@@ -215,6 +215,9 @@ export default function Home() {
           </div>
 
           <div style={{display:'flex', alignItems:'center', gap:8}}>
+            <a className="ghostBtn" href="/examples/086_preprocessed.wav" target="_blank" rel="noopener noreferrer" title="Open examples" aria-label="Open examples">
+              Examples
+            </a>
             <a className="ghostBtn" href="https://github.com/omarja12/polyglot-transcribe" target="_blank" rel="noopener noreferrer" title="View source on GitHub" aria-label="View project on GitHub">
               <span style={{display:'inline-flex', alignItems:'center', gap:8}}><GitHubIcon /> View on GitHub</span>
             </a>

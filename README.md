@@ -44,6 +44,12 @@ tooling — end to end, from audio capture in the browser to a deployed, publicl
 
 ---
 
+## Examples
+
+An example preprocessed audio file is included in the repo for demo and testing: [frontend/public/examples/086_preprocessed.wav](frontend/public/examples/086_preprocessed.wav). When the app is deployed the same file is served from /examples/086_preprocessed.wav (for example: https://your-site.example/examples/086_preprocessed.wav). Use this file to try the upload flow or to audition the preprocessing/denoising pipeline.
+
+---
+
 Project description shown on GitHub: "Polyglot Transcribe — near real-time multilingual speech-to-text and AI-generated reports (French, Arabic, English)."
 
 Note: To set the repository description and homepage on GitHub (so it appears in the repo header), either edit them in the web UI (top-right of the repo page) or run locally with the GitHub CLI:
