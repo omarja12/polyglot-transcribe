@@ -342,6 +342,23 @@ async def preprocess_and_save(file: UploadFile = File(...), filename: Optional[s
     return {"saved": str(out_path), "public_path": public_path}
 
 
+@app.get('/examples/list')
+def list_examples():
+    """Return a JSON list of saved example files (public paths) under frontend/public/examples.
+    This is intentionally read-only and only returns file names and public paths for UI listing.
+    """
+    examples_dir = Path(__file__).resolve().parent.parent / 'frontend' / 'public' / 'examples'
+    if not examples_dir.exists():
+        return {"examples": []}
+
+    allowed_ext = {'.wav', '.mp3', '.ogg', '.m4a'}
+    items = []
+    for p in sorted(examples_dir.iterdir()):
+        if p.is_file() and p.suffix.lower() in allowed_ext:
+            items.append({"name": p.name, "public_path": f"/examples/{p.name}", "size_bytes": p.stat().st_size})
+    return {"examples": items}
+
+
 
 class ReportRequest(BaseModel):
     transcript: str

@@ -41,6 +41,10 @@ export default function Home() {
   const [reportModel, setReportModel] = useState<string | null>(null);
   const [transcribeModel, setTranscribeModel] = useState<string | null>(null);
   const [preprocessEnabled, setPreprocessEnabled] = useState<boolean>(true);
+  const [publishEnabled] = useState<boolean>(process.env.NEXT_PUBLIC_ENABLE_PUBLISH === 'true');
+  const [publishFilename, setPublishFilename] = useState<string>('');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishedExamples, setPublishedExamples] = useState<Array<{name:string; public_path:string; size_bytes:number}>>([]);
 
   const clientIdRef = useRef<string>("");
   if (!clientIdRef.current && typeof window !== "undefined") {
@@ -163,6 +167,35 @@ export default function Home() {
     } finally {
       setIsTranscribingFile(false);
     }
+  }
+
+  async function refreshPublishedExamples(){
+  try{
+    const list = await (await import('@/lib/api')).listExamples();
+    setPublishedExamples(list);
+  }catch(e){
+    // ignore
+  }
+  }
+
+  useEffect(()=>{ if(publishEnabled) refreshPublishedExamples(); }, [publishEnabled]);
+
+  async function handlePublishExample(){
+  const file = fileInputRef.current?.files?.[0];
+  if(!file){ setError('Pick a file first to publish.'); return; }
+  setIsPublishing(true);
+  setError('');
+  try{
+    const api = await import('@/lib/api');
+    const result = await api.preprocessSave(file, publishFilename || undefined);
+    // refresh list
+    await refreshPublishedExamples();
+    setError('Published: ' + result.public_path);
+  }catch(err){
+    setError(err instanceof Error? err.message : 'Publish failed');
+  }finally{
+    setIsPublishing(false);
+  }
   }
 
   async function handleCopy() {
@@ -351,12 +384,37 @@ export default function Home() {
               >
                 {isTranscribingFile ? "Transcribing…" : "Transcribe file"}
               </button>
+
+              {publishEnabled && (
+                <div style={{display:'inline-flex', alignItems:'center', gap:8, marginLeft:12}}>
+                  <input placeholder="filename (optional)" value={publishFilename} onChange={(e)=>setPublishFilename(e.target.value)} style={{fontSize:13, padding:'6px 8px'}} />
+                  <button className="ghostBtn" disabled={!fileInfo || isPublishing} onClick={handlePublishExample}>{isPublishing? 'Publishing…' : 'Publish example'}</button>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {error && <div className="errorRow">{error}</div>}
       </section>
+
+      {publishEnabled && (
+        <section className="panel">
+          <h3>Published examples</h3>
+          {publishedExamples.length === 0 ? (
+            <p className="hint">No published examples yet.</p>
+          ) : (
+            <ul>
+              {publishedExamples.map((ex) => (
+                <li key={ex.public_path} style={{marginBottom:8}}>
+                  <a href={ex.public_path} target="_blank" rel="noopener noreferrer">{ex.name}</a> — {(ex.size_bytes/1024).toFixed(1)} KB
+                  <div><audio controls src={ex.public_path} style={{marginTop:6, maxWidth:320}} /></div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {transcript && (
         <div className="twoCol">

@@ -81,3 +81,23 @@ export async function getConfig(): Promise<{ report_model?: string; fallback_rep
     return {};
   }
 }
+
+export async function preprocessSave(file: File, filename?: string): Promise<{ saved: string; public_path: string }>{
+  const form = new FormData();
+  form.append('file', file);
+  if (filename) form.append('filename', filename);
+  const res = await fetch(`${API_URL}/preprocess/save`, { method: 'POST', body: form });
+  if (!res.ok) throw new Error((await res.json()).detail || 'Failed to save preprocessed example.');
+  return res.json();
+}
+
+export async function listExamples(): Promise<{ name: string; public_path: string; size_bytes: number }[]> {
+  try {
+    const res = await fetch(`${API_URL}/examples/list`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.examples || [];
+  } catch {
+    return [];
+  }
+}

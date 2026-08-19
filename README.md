@@ -48,6 +48,17 @@ tooling — end to end, from audio capture in the browser to a deployed, publicl
 
 An example preprocessed audio file is included in the repo for demo and testing: [frontend/public/examples/086_preprocessed.wav](frontend/public/examples/086_preprocessed.wav). When the app is deployed the same file is served from /examples/086_preprocessed.wav (for example: https://your-site.example/examples/086_preprocessed.wav). Use this file to try the upload flow or to audition the preprocessing/denoising pipeline.
 
+Admin-only: publishing examples from the site
+
+The app includes an optional "Publish example" feature that lets an admin preprocess and save an uploaded audio file into the repo's public examples folder (frontend/public/examples). This is protected by a frontend toggle that is enabled when you set the environment variable NEXT_PUBLIC_ENABLE_PUBLISH=true for your frontend deployment or local dev environment. When enabled, the upload card shows a small "Publish example" control where you can provide an optional filename and publish the currently-selected file. The server validates the processed audio before saving to avoid corrupted files.
+
+To enable publishing locally (recommended for maintainers):
+
+  # in frontend/.env.local
+  NEXT_PUBLIC_ENABLE_PUBLISH=true
+
+Then run the frontend dev server and open the app. After selecting a file, enter an optional filename and click "Publish example". The site will call the backend POST /preprocess/save endpoint which preprocesses, validates, and saves the cleaned WAV into frontend/public/examples. The saved file is then available at /examples/<filename> on the deployed frontend.
+
 ---
 
 Project description shown on GitHub: "Polyglot Transcribe — near real-time multilingual speech-to-text with AI-generated structured reports (French, Arabic, English)."
