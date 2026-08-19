@@ -369,8 +369,20 @@ export default function Home() {
         </section>
       )}
 
+      <section className="aboutPanel">
+        <h3 className="aboutTitle">About & How it works</h3>
+        <p className="aboutText">
+          Polyglot Transcribe converts short audio snippets or uploaded recordings into clean
+          meeting or consultation reports. The app transcribes audio (Whisper models) and then
+          generates a structured report (summary, key points, decisions, follow-ups) using a
+          configurable LLM on Groq. For portfolio demos, the report model is configurable via
+          environment variables so the demo runs with your available account models.
+        </p>
+      </section>
+
       <footer className="footer">
-        Built with Next.js, FastAPI, and Groq (Whisper large-v3 + configured report model).
+        Built with Next.js, FastAPI, and Groq. Demo for portfolio use — adjust GROQ_REPORT_MODEL in
+        the backend to select your preferred model.
       </footer>
     </main>
   );
