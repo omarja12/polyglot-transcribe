@@ -337,9 +337,42 @@ async def preprocess_and_save(file: UploadFile = File(...), filename: Optional[s
     with open(out_path, 'wb') as f:
         f.write(processed)
 
+    git_result = {"attempted": False, "ok": False, "message": "Auto-commit disabled"}
+
+    # Optionally auto-commit the new example into the repo so it appears in version control.
+    # Controlled via environment variable AUTO_COMMIT_EXAMPLES (set to 'true' to enable).
+    try:
+        if os.getenv("AUTO_COMMIT_EXAMPLES", "false").lower() in ("1", "true", "yes"):
+            git_result["attempted"] = True
+            repo_root = Path(__file__).resolve().parent.parent
+            rel_path = out_path.relative_to(repo_root)
+
+            # Stage the file
+            add = subprocess.run(["git", "add", str(rel_path)], cwd=repo_root, capture_output=True, text=True)
+            if add.returncode != 0:
+                git_result["message"] = f"git add failed: {add.stderr.strip() or add.stdout.strip()}"
+            else:
+                # Commit with a concise message and co-author trailer
+                commit_msg = f"Add example audio: {safe_name}\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+                commit = subprocess.run(["git", "commit", "-m", commit_msg], cwd=repo_root, capture_output=True, text=True)
+                if commit.returncode != 0:
+                    # No changes to commit is not fatal; surface the message
+                    git_result["message"] = f"git commit returned: {commit.stderr.strip() or commit.stdout.strip()}"
+                else:
+                    # Push to origin main (best-effort)
+                    push = subprocess.run(["git", "push", "origin", "main"], cwd=repo_root, capture_output=True, text=True)
+                    if push.returncode != 0:
+                        git_result["message"] = f"git push failed: {push.stderr.strip() or push.stdout.strip()}"
+                    else:
+                        git_result["ok"] = True
+                        git_result["message"] = "Committed and pushed to origin/main"
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Error attempting auto-commit: %s", exc)
+        git_result = {"attempted": True, "ok": False, "message": f"Exception during auto-commit: {exc}"}
+
     # Return the public-facing path (frontend serves files under /)
     public_path = f"/examples/{safe_name}"
-    return {"saved": str(out_path), "public_path": public_path}
+    return {"saved": str(out_path), "public_path": public_path, "git": git_result}
 
 
 @app.get('/examples/list')

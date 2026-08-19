@@ -59,6 +59,20 @@ To enable publishing locally (recommended for maintainers):
 
 Then run the frontend dev server and open the app. After selecting a file, enter an optional filename and click "Publish example". The site will call the backend POST /preprocess/save endpoint which preprocesses, validates, and saves the cleaned WAV into frontend/public/examples. The saved file is then available at /examples/<filename> on the deployed frontend.
 
+Auto-commit and push to GitHub (optional)
+
+If you would like the backend to automatically commit saved examples into the repository and push them to origin/main, enable the backend environment variable AUTO_COMMIT_EXAMPLES=true on the host where the backend runs. The backend will then attempt to run `git add`, `git commit`, and `git push origin main` after saving a validated example. Note:
+
+- This requires the backend host to have git installed and configured with appropriate credentials (SSH key or HTTPS token) that allow pushing to the repository — the server cannot set these for you.
+- Auto-commit is best used in a trusted, maintainer-controlled environment. If git operations fail the API will return a helpful `git` field explaining the failure; nothing destructive is performed.
+
+To enable auto-commit on the backend host (example for PowerShell / Render environment variables):
+
+  # set as an environment variable for the backend process
+  $env:AUTO_COMMIT_EXAMPLES = 'true'
+
+Restart the backend after setting the env var. The API response from POST /preprocess/save includes a `git` object with { attempted, ok, message } describing the result of the auto-commit attempt.
+
 ---
 
 Project description shown on GitHub: "Polyglot Transcribe — near real-time multilingual speech-to-text with AI-generated structured reports (French, Arabic, English)."
