@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { LANGUAGES, LanguageCode, UsageInfo } from "@/lib/types";
-import { transcribeChunk, transcribeFile, generateReport, getUsage } from "@/lib/api";
+import { transcribeChunk, transcribeFile, generateReport, getUsage, getConfig } from "@/lib/api";
 
 const CHUNK_MS = 5000;
 const MAX_UPLOAD_MB = 50;
@@ -36,6 +36,8 @@ export default function Home() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [copied, setCopied] = useState(false);
   const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [reportModel, setReportModel] = useState<string | null>(null);
+  const [transcribeModel, setTranscribeModel] = useState<string | null>(null);
 
   const clientIdRef = useRef<string>("");
   if (!clientIdRef.current && typeof window !== "undefined") {
@@ -56,6 +58,22 @@ export default function Home() {
       // non-fatal: usage display is best-effort
     }
   }, []);
+
+  // Fetch backend config (models) so the UI shows the actual models in use.
+  const loadConfig = useCallback(async () => {
+    try {
+      const cfg = await getConfig();
+      if (cfg.report_model) setReportModel(cfg.report_model);
+      if (cfg.transcribe_model) setTranscribeModel(cfg.transcribe_model);
+    } catch {
+      // ignore config errors
+    }
+  }, []);
+
+  // Load config once on mount
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
 
   const recordLoop = useCallback(() => {
     if (!listeningRef.current || !streamRef.current) return;
@@ -185,7 +203,7 @@ export default function Home() {
         <h1 className="title">Polyglot Transcribe</h1>
         <p className="subtitle">
           Near real-time transcription and AI-generated reports in French, Arabic, and
-          English — powered by Whisper large-v3 and Llama 3.3 on Groq.
+          English — powered by {transcribeModel || "Whisper large-v3"} and {reportModel || "the configured report model"} on Groq.
         </p>
       </header>
 
@@ -331,7 +349,7 @@ export default function Home() {
       )}
 
       <footer className="footer">
-        Built with Next.js, FastAPI, and Groq (Whisper large-v3 + Llama 3.3).
+        Built with Next.js, FastAPI, and Groq (Whisper large-v3 + configured report model).
       </footer>
     </main>
   );

@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+import re
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -24,8 +25,12 @@ client = Groq(api_key=GROQ_API_KEY)
 MAX_UPLOAD_MB = 50
 DAILY_USAGE_LIMIT_SECONDS = 60 * 60  # 60 minutes of processed audio, per client
 
-TRANSCRIBE_MODEL = "whisper-large-v3"
-REPORT_MODEL = "llama-3.3-70b-versatile"
+# Models can be overridden via environment variables. Default REPORT_MODEL is set to
+# an available Groq-hosted model observed on the account (qwen/qwen3.6-27b) so the
+# app works even if access to specific models isn't enabled for the API key.
+TRANSCRIBE_MODEL = os.getenv("GROQ_TRANSCRIBE_MODEL", "whisper-large-v3")
+REPORT_MODEL = os.getenv("GROQ_REPORT_MODEL", "qwen/qwen3.6-27b")
+FALLBACK_REPORT_MODEL = os.getenv("GROQ_FALLBACK_REPORT_MODEL", "groq/compound")
 
 LANGUAGE_MAP = {"fr": "fr", "ar": "ar", "en": "en"}
 
@@ -33,10 +38,40 @@ DEFAULT_REPORT_PROMPT = (
     "You are an assistant that writes clear, structured meeting or consultation reports. "
     "Given the transcript below, produce a concise report with these sections: Summary, "
     "Key Points, Decisions, and Follow-up Actions. Stay strictly factual and do not add "
-    "information that is not present in the transcript."
+    "information that is not present in the transcript. "
+    "Do not include internal deliberation, chain-of-thought, or markers like <think>...</think>; "
+    "output only the final, user-facing report in plain text."
 )
 
 app = FastAPI(title="Polyglot Transcribe API")
+
+
+def _sanitize_report_text(text: str) -> str:
+    """Remove internal reasoning markers and common chain-of-thought preambles from model output.
+    Keeps the user-facing report content while stripping <think>...</think> blocks and phrases like
+    "Here's a thinking process". Also collapses multiple blank lines.
+    """
+    if not text:
+        return text
+
+    # Remove <think>...</think> blocks
+    text = re.sub(r"(?is)<think>.*?</think>", "", text)
+
+    # Remove common 'thinking process' preamble blocks up to the first blank line
+    text = re.sub(r"(?is)here(?:'|’)s a thinking process:.*?(?:\n\s*\n|$)", "", text)
+    text = re.sub(r"(?is)here(?:'|’)s an? analysis:.*?(?:\n\s*\n|$)", "", text)
+
+    # Remove lines that look like internal deliberation headings
+    text = re.sub(r"(?im)^\s*\*\*?think\*\*?\s*$", "", text)
+
+    # Remove any remaining angle-bracket markers like <think> or </think>
+    text = text.replace("<think>", "").replace("</think>", "")
+
+    # Collapse multiple blank lines into two
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    # Trim
+    return text.strip()
 
 app.add_middleware(
     CORSMiddleware,
@@ -76,6 +111,49 @@ def _transcribe_bytes(audio_bytes: bytes, filename: str, language: Optional[str]
 @app.get("/")
 def health():
     return {"status": "ok", "service": "polyglot-transcribe-api"}
+
+
+@app.get("/models")
+def list_models():
+    """Returns a list of Groq models accessible to the configured API key.
+    Call this endpoint locally after setting GROQ_API_KEY in backend/.env to see
+    which models your account can use (helps diagnose model access).
+    """
+    try:
+        res = client.models.list()
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=f"Could not list models: {exc}") from exc
+
+    # Normalize different possible response shapes into a simple list of model ids/names.
+    model_list = []
+    try:
+        data = getattr(res, "data", res)
+        if isinstance(data, list):
+            for m in data:
+                if isinstance(m, dict):
+                    model_list.append(m.get("id") or m.get("name") or str(m))
+                else:
+                    # fallback to string representation
+                    model_list.append(getattr(m, "id", str(m)))
+        else:
+            model_list.append(str(data))
+    except Exception:
+        model_list = [str(res)]
+
+    return {"models": model_list}
+
+
+@app.get("/config")
+def get_config():
+    """Returns the backend's configured model names so the frontend can display them.
+    This is safe to expose (no API keys) and helps the UI show which report/transcribe
+    models are currently in use.
+    """
+    return {
+        "report_model": REPORT_MODEL,
+        "fallback_report_model": FALLBACK_REPORT_MODEL,
+        "transcribe_model": TRANSCRIBE_MODEL,
+    }
 
 
 @app.post("/transcribe/chunk")
@@ -132,6 +210,21 @@ class ReportRequest(BaseModel):
     client_id: str = "anonymous"
 
 
+@app.get("/report")
+def report_info():
+    """Helper GET endpoint that explains how to call /report (POST-only).
+    Visiting /report in a browser will return this message with a curl example.
+    """
+    example = (
+        "curl -s -X POST http://127.0.0.1:8000/report -H 'Content-Type: application/json' "
+        "-d '{\"transcript\":\"Hello world. Short test.\",\"client_id\":\"test\"}'"
+    )
+    return {
+        "detail": "This endpoint accepts POST requests. Use the example curl command to generate a report.",
+        "example_curl": example,
+    }
+
+
 @app.post("/report")
 async def generate_report(payload: ReportRequest):
     """Generates a structured report from a transcript using a Groq-hosted LLM.
@@ -157,8 +250,37 @@ async def generate_report(payload: ReportRequest):
         )
         text = completion.choices[0].message.content
     except Exception as exc:  # noqa: BLE001
+        # Provide clearer diagnostics for common model-access issues and optionally
+        # attempt a configured fallback model so the app can continue to run.
+        msg = str(exc).lower()
+        access_indicators = ("401", "403", "access denied", "not authorized", "permission", "forbidden")
+        if any(ind in msg for ind in access_indicators):
+            detail = (
+                f"Model access denied for '{REPORT_MODEL}'. Your GROQ_API_KEY may not be authorized to use this model. "
+                "Check the Groq dashboard to enable model access or set GROQ_REPORT_MODEL to a model your account can use."
+            )
+            if FALLBACK_REPORT_MODEL:
+                try:
+                    completion = client.chat.completions.create(
+                        model=FALLBACK_REPORT_MODEL,
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": f"{prompt}\n\n---\nTRANSCRIPT:\n{payload.transcript}",
+                            }
+                        ],
+                    )
+                    text = completion.choices[0].message.content
+                except Exception as exc2:  # noqa: BLE001
+                    raise HTTPException(status_code=502, detail=f"{detail} Also fallback failed: {exc2}") from exc2
+            else:
+                raise HTTPException(status_code=403, detail=detail) from exc
+        if "404" in msg or "model not found" in msg:
+            raise HTTPException(status_code=404, detail=f"Model '{REPORT_MODEL}' not available to this account: {exc}") from exc
         raise HTTPException(status_code=502, detail=f"Report generation failed: {exc}") from exc
 
+    # Sanitize the model output to remove any internal reasoning markers before returning to the frontend
+    text = _sanitize_report_text(text)
     return {"report": text}
 
 

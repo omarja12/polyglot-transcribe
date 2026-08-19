@@ -51,7 +51,7 @@ tooling — end to end, from audio capture in the browser to a deployed, publicl
 | Frontend | Next.js (React, TypeScript) | Modern React framework, deploys natively on Vercel with zero config |
 | Backend | FastAPI (Python) | Lightweight, async-friendly API layer, easy to reason about and extend |
 | Speech-to-text | [Whisper large-v3](https://github.com/openai/whisper) via [Groq](https://groq.com) | OpenAI's most accurate open Whisper model, served by Groq's inference hardware for very low latency — the speed that makes near-real-time chunked transcription feasible without hosting a GPU myself |
-| Report generation | Llama 3.3 70B via Groq | Fast, capable open-weight LLM, also free-tier accessible through Groq — keeps the whole stack on one provider |
+| Report generation | Configurable via GROQ_REPORT_MODEL (defaults to qwen/qwen3.6-27b on this repo) | Model is selected via environment variable `GROQ_REPORT_MODEL`. Set `GROQ_REPORT_MODEL` to the desired model id after confirming access on your Groq account. |
 | Hosting | Vercel (frontend) + Render (backend) | Both offer genuinely free tiers suitable for a public demo |
 
 **Why Groq specifically:** Whisper is not a streaming model — it transcribes a finished audio
@@ -75,7 +75,7 @@ that loop usable instead of laggy.
                                                           ┌────────▼─────────┐
                                                           │   Groq API        │
                                                           │  - Whisper large-v3
-                                                          │  - Llama 3.3 70B   │
+                                                          │  - Report model configurable via GROQ_REPORT_MODEL
                                                           └───────────────────┘
 ```
 

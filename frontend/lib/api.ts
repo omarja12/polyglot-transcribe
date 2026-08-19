@@ -69,3 +69,13 @@ export async function getUsage(clientId: string): Promise<UsageInfo> {
   if (!res.ok) throw new Error("Failed to fetch usage.");
   return res.json();
 }
+
+export async function getConfig(): Promise<{ report_model?: string; fallback_report_model?: string; transcribe_model?: string }>{
+  try {
+    const res = await fetch(`${API_URL}/config`);
+    if (!res.ok) return {};
+    return res.json();
+  } catch {
+    return {};
+  }
+}
