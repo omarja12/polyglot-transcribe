@@ -353,3 +353,16 @@ def get_usage(client_id: str):
         "limit_minutes": DAILY_USAGE_LIMIT_SECONDS / 60,
         "remaining_minutes": round(max(0, DAILY_USAGE_LIMIT_SECONDS - used_seconds) / 60, 2),
     }
+
+
+@app.post('/preprocess')
+async def preprocess_file(file: UploadFile = File(...)):
+    """Returns a preprocessed WAV (16k mono) for a submitted audio file. Useful for downloading
+    the cleaned example audio for the repo or inspection.
+    """
+    audio_bytes = await file.read()
+    processed = _preprocess_audio_bytes(audio_bytes, file.filename or 'uploaded')
+    # Return as WAV
+    from fastapi.responses import Response
+
+    return Response(content=processed, media_type='audio/wav')
