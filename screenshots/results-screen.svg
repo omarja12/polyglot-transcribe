@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" fill="none">
+  <rect width="1000" height="600" rx="12" fill="#FEFEFF" stroke="#EEF2FF"/>
+  <rect x="40" y="40" width="440" height="480" rx="8" fill="#fff" stroke="#E6EEF8"/>
+  <text x="64" y="80" font-family="Inter, sans-serif" font-size="20" fill="#0b1020">Transcript</text>
+  <rect x="60" y="110" width="400" height="380" rx="6" fill="#FBFBFD" stroke="#F0F4FF"/>
+  <text x="80" y="140" font-family="Inter, sans-serif" font-size="13" fill="#0b1020">Hello world. This is an automated test transcript for Polyglot Transcribe.</text>
+
+  <rect x="520" y="40" width="440" height="480" rx="8" fill="#fff" stroke="#E6EEF8"/>
+  <text x="540" y="80" font-family="Inter, sans-serif" font-size="20" fill="#0b1020">AI-generated report</text>
+  <foreignObject x="540" y="110" width="400" height="380">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Inter, sans-serif; color:#111827; font-size:13px; line-height:1.5;">
+      <strong>Summary</strong>
+      <p>The transcript contains only a test greeting and contains no substantive meeting content.</p>
+      <strong>Key Points</strong>
+      <ul><li>None identified</li></ul>
+    </div>
+  </foreignObject>
+</svg>

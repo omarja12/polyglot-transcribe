@@ -36,11 +36,21 @@ tooling — end to end, from audio capture in the browser to a deployed, publicl
 
 **Upload a file and pick a language**
 
-![Upload screen](screenshots/upload-screen.png)
+![Upload screen](screenshots/upload-screen.svg)
 
 **Transcript and AI-generated report**
 
-![Results screen](screenshots/results-screen.png)
+![Results screen](screenshots/results-screen.svg)
+
+---
+
+Project description shown on GitHub: "Polyglot Transcribe — near real-time multilingual speech-to-text and AI-generated reports (French, Arabic, English)."
+
+Note: To set the repository description and homepage on GitHub (so it appears in the repo header), either edit them in the web UI (top-right of the repo page) or run locally with the GitHub CLI:
+
+  gh repo edit --description "Polyglot Transcribe — near real-time multilingual speech-to-text and AI-generated reports (French, Arabic, English)." --homepage "https://github.com/omarja12/polyglot-transcribe"
+
+I can't change the GitHub repo metadata (description/homepage) from this environment without authentication, but the command above will do it if you run it on your machine while authenticated with gh. If you want, paste or upload a short one-line description and I can include it as the recommended repo description in the README as well.
 
 ---
 

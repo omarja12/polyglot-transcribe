@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" fill="none">
+  <rect width="1000" height="600" rx="12" fill="#F8FAFC" stroke="#E6EEF8"/>
+  <rect x="40" y="40" width="420" height="220" rx="8" fill="#fff" stroke="#E6EEF8"/>
+  <text x="64" y="80" font-family="Inter, sans-serif" font-size="20" fill="#0b1020">Upload audio</text>
+  <rect x="60" y="120" width="360" height="36" rx="6" fill="#06B6D4"/>
+  <text x="220" y="145" font-family="Inter, sans-serif" font-size="14" fill="#fff" text-anchor="middle">Choose file</text>
+  <rect x="500" y="40" width="440" height="420" rx="8" fill="#fff" stroke="#E6EEF8"/>
+  <text x="520" y="80" font-family="Inter, sans-serif" font-size="20" fill="#0b1020">Transcript (preview)</text>
+  <rect x="520" y="110" width="400" height="300" rx="6" fill="#FBFBFD" stroke="#F0F4FF"/>
+  <text x="540" y="140" font-family="Inter, sans-serif" font-size="13" fill="#6b6f77">Hello world. This is an automated test transcript for Polyglot Transcribe.</text>
+</svg>
