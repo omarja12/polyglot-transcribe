@@ -14,6 +14,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="apple-touch-icon" href="/logo-monogram.svg" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <meta name="theme-color" content="#0EA5A4" />
+      </head>
       <body>{children}</body>
     </html>
   );

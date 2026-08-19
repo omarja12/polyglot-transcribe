@@ -116,29 +116,58 @@ polyglot-transcribe/
 
 ## Running locally
 
-### Backend
+Quick checklist (Windows PowerShell)
+
+```powershell
+# Backend
+cd backend
+python -m venv .venv
+# Install dependencies using the venv python (no need to "activate")
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -r requirements.txt
+copy .env.example .env
+# Edit backend\.env to set GROQ_API_KEY and optional GROQ_REPORT_MODEL
+.venv\Scripts\python -m uvicorn main:app --reload --port 8000
+
+# Frontend (new terminal)
+cd frontend
+npm install
+copy .env.local.example .env.local
+npm run dev
+# Open http://localhost:3000
+```
+
+Quick checklist (macOS / Linux)
 
 ```bash
+# Backend
 cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+python -m venv .venv
+. .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env            # then add your GROQ_API_KEY
+cp .env.example .env
 uvicorn main:app --reload --port 8000
+
+# Frontend (new terminal)
+cd frontend
+npm install
+cp .env.local.example .env.local
+npm run dev
+# Open http://localhost:3000
 ```
 
 Get a free Groq API key at [console.groq.com/keys](https://console.groq.com/keys).
 
-### Frontend
+About / How it works
 
-```bash
-cd frontend
-npm install
-cp .env.local.example .env.local   # defaults to http://localhost:8000, fine for local dev
-npm run dev
-```
+Polyglot Transcribe converts short audio snippets or uploaded recordings into clean
+meeting or consultation reports. The app transcribes audio (Whisper models) and then
+generates a structured report (summary, key points, decisions, follow-ups) using a
+configurable LLM on Groq. For portfolio demos, the report model is configurable via
+environment variables so the demo runs with your available account models.
 
-Visit `http://localhost:3000`.
+For running locally, set GROQ_API_KEY in backend/.env and (optionally) GROQ_REPORT_MODEL
+if you'd like to test a specific model that your Groq account can access.
 
 ---
 

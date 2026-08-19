@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="fgrad" x1="0" x2="1">
+      <stop offset="0" stop-color="#0EA5A4"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="url(#fgrad)" />
+  <g transform="translate(16,16)" fill="#fff">
+    <rect x="0" y="8" width="4" height="16" rx="2" />
+    <rect x="8" y="0" width="4" height="32" rx="2" />
+    <rect x="16" y="8" width="4" height="16" rx="2" />
+  </g>
+</svg>

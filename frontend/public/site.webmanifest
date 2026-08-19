@@ -1,0 +1,12 @@
+{
+  "name": "Polyglot Transcribe",
+  "short_name": "Polyglot",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "64x64", "type": "image/svg+xml" },
+    { "src": "/logo-monogram.svg", "sizes": "96x96", "type": "image/svg+xml" }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0EA5A4"
+}
