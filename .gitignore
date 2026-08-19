@@ -18,3 +18,10 @@ frontend/.env.local
 
 # Editor
 .vscode/
+
+# Local test outputs and generated artifacts
+backend/test_outputs/
+payload.json
+rep.json
+response.json
+scripts/__pycache__/
