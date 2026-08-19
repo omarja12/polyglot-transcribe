@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import { LANGUAGES, LanguageCode, UsageInfo } from "@/lib/types";
 import { transcribeChunk, transcribeFile, generateReport, getUsage, getConfig } from "@/lib/api";
-import { MicIcon, UploadIcon, CopyIcon, ExportIcon } from "./icons";
+import { MicIcon, UploadIcon, CopyIcon, ExportIcon, GitHubIcon } from "./icons";
 
 const CHUNK_MS = 5000;
 const MAX_UPLOAD_MB = 50;
@@ -213,8 +213,8 @@ export default function Home() {
           </div>
 
           <div style={{display:'flex', alignItems:'center', gap:8}}>
-            <a className="ghostBtn" href="https://github.com/omarja12/polyglot-transcribe" target="_blank" rel="noopener noreferrer" title="View source on GitHub">
-              <span style={{display:'inline-flex', alignItems:'center', gap:8}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.49.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.19-3.37-1.19-.45-1.17-1.11-1.48-1.11-1.48-.91-.62.07-.61.07-.61 1.01.07 1.54 1.04 1.54 1.04.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.64-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.98 1.03-2.68-.1-.26-.45-1.28.1-2.66 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0 1 12 6.8c.85.004 1.71.114 2.51.336 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.66.64.7 1.03 1.59 1.03 2.68 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85 0 1.33-.01 2.41-.01 2.74 0 .26.18.58.69.48A10.01 10.01 0 0 0 22 12c0-5.52-4.48-10-10-10z" fill="currentColor"/></svg> View on GitHub</span>
+            <a className="ghostBtn" href="https://github.com/omarja12/polyglot-transcribe" target="_blank" rel="noopener noreferrer" title="View source on GitHub" aria-label="View project on GitHub">
+              <span style={{display:'inline-flex', alignItems:'center', gap:8}}><GitHubIcon /> View on GitHub</span>
             </a>
           </div>
         </div>
@@ -401,9 +401,18 @@ export default function Home() {
         </p>
       </section>
 
-      <footer className="footer">
-        Built with Next.js, FastAPI, and Groq. Demo for portfolio use — adjust GROQ_REPORT_MODEL in
-        the backend to select your preferred model.
+      <footer className="siteFooter">
+        <div className="cta">
+          <strong>See a live demo or try it locally.</strong>
+          <a className="ctaBtn" href="/" onClick={(e) => e.preventDefault()} style={{marginLeft:12}}>Try demo</a>
+        </div>
+
+        <div className="links">
+          <a href="https://github.com/omarja12/polyglot-transcribe" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+          <a href="https://your-portfolio.example.com" target="_blank" rel="noopener noreferrer">Contact / Portfolio</a>
+        </div>
+
+        <div style={{fontSize:12,color:'var(--muted)'}}>Built with Next.js, FastAPI, and Groq. © {new Date().getFullYear()} Polyglot Transcribe</div>
       </footer>
     </main>
   );
