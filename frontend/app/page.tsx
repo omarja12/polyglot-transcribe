@@ -306,7 +306,7 @@ export default function Home() {
             </p>
           </div>
         ) : (
-          <div className="uploadBlock">
+          <div className="uploadBlock uploadCard">
             <input
               ref={fileInputRef}
               type="file"
@@ -315,23 +315,32 @@ export default function Home() {
               className="fileInput"
               id="fileInput"
             />
-            <label htmlFor="fileInput" className="uploadBtn">
-              Choose an audio file
-            </label>
-            <p className="hint">Max file size: {MAX_UPLOAD_MB} MB.</p>
-            {fileInfo && (
-              <div className="fileRow">
-                <span>{fileInfo.name}</span>
-                <span className="fileMeta">{fileInfo.sizeMB.toFixed(1)} MB</span>
+
+            <div className="uploadRow">
+              <label htmlFor="fileInput" className="fileLabel">
+                <span className="fileLabelInner">Choose an audio file</span>
+              </label>
+
+              <div className="fileMetaArea">
+                <p className="hint">Max file size: {MAX_UPLOAD_MB} MB.</p>
+                {fileInfo && (
+                  <div className="fileRow fileRow--compact">
+                    <span className="fileName" title={fileInfo.name}>{fileInfo.name}</span>
+                    <span className="fileMeta">{fileInfo.sizeMB.toFixed(1)} MB</span>
+                  </div>
+                )}
               </div>
-            )}
-            <button
-              className="primaryBtn"
-              disabled={!fileInfo || isTranscribingFile}
-              onClick={handleTranscribeFile}
-            >
-              {isTranscribingFile ? "Transcribing…" : "Transcribe file"}
-            </button>
+            </div>
+
+            <div className="uploadActions">
+              <button
+                className="primaryBtn"
+                disabled={!fileInfo || isTranscribingFile}
+                onClick={handleTranscribeFile}
+              >
+                {isTranscribingFile ? "Transcribing…" : "Transcribe file"}
+              </button>
+            </div>
           </div>
         )}
 
