@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from "react";
 import { LANGUAGES, LanguageCode, UsageInfo } from "@/lib/types";
 import { transcribeChunk, transcribeFile, generateReport, getUsage, getConfig } from "@/lib/api";
+import { MicIcon, UploadIcon, CopyIcon, ExportIcon } from "./icons";
 
 const CHUNK_MS = 5000;
 const MAX_UPLOAD_MB = 50;
@@ -200,12 +201,19 @@ export default function Home() {
   return (
     <main className="page">
       <header className="hero">
-        <div className="eyebrow">Multilingual speech-to-report</div>
-        <h1 className="title">Polyglot Transcribe</h1>
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: 12}}>
+          <img src="/logo.svg" alt="Polyglot Transcribe" style={{height: 40}} />
+          <div style={{textAlign: 'left'}}>
+            <div className="eyebrow">Multilingual speech-to-report</div>
+            <h1 className="title">Polyglot Transcribe</h1>
+          </div>
+        </div>
+
         <p className="subtitle">
           Near real-time transcription and AI-generated reports in French, Arabic, and
           English — powered by {transcribeModel || "Whisper large-v3"} and {reportModel || "the configured report model"} on Groq.
         </p>
+
         <div className="heroButtons">
           <button
             className="ctaBtn"
@@ -214,7 +222,7 @@ export default function Home() {
               startListening();
             }}
           >
-            Start Live
+            <span style={{display:'inline-flex', alignItems:'center', gap:8}}><MicIcon /> Start Live</span>
           </button>
           <button
             className="ctaBtn secondaryCta"
@@ -223,7 +231,7 @@ export default function Home() {
               fileInputRef.current?.click();
             }}
           >
-            Upload Audio
+            <span style={{display:'inline-flex', alignItems:'center', gap:8}}><UploadIcon /> Upload Audio</span>
           </button>
         </div>
       </header>
@@ -321,52 +329,55 @@ export default function Home() {
       </section>
 
       {transcript && (
-        <section className="panel">
-          <div className="panelHead">
-            <h2 className="panelTitle">Transcript</h2>
-            <div className="actionRow">
-              <button className="ghostBtn" onClick={handleCopy}>
-                {copied ? "Copied" : "Copy"}
-              </button>
-              <button className="ghostBtn" onClick={handleExport}>
-                Export .txt
-              </button>
+        <div className="twoCol">
+          <section className="panel two">
+            <div className="panelHead">
+              <h2 className="panelTitle">Transcript</h2>
+              <div className="actionToolbar">
+                <button className="iconBtn" onClick={handleCopy} title="Copy transcript"><CopyIcon />{copied ? "Copied" : "Copy"}</button>
+                <button className="iconBtn" onClick={handleExport} title="Export transcript"><ExportIcon />Export .txt</button>
+              </div>
             </div>
-          </div>
-          <textarea
-            className="textarea"
-            value={transcript}
-            onChange={(e) => setTranscript(e.target.value)}
-            rows={8}
-          />
-        </section>
-      )}
+            <textarea
+              className="textarea"
+              value={transcript}
+              onChange={(e) => setTranscript(e.target.value)}
+              rows={12}
+            />
+          </section>
 
-      {transcript && (
-        <section className="panel">
-          <h2 className="panelTitle">AI-generated report</h2>
-          <label className="smallLabel">Prompt</label>
-          <textarea
-            className="promptArea"
-            value={prompt}
-            rows={3}
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-          {prompt !== DEFAULT_PROMPT && (
-            <button className="linkBtn" onClick={() => setPrompt(DEFAULT_PROMPT)}>
-              Reset to default prompt
+          <section className="panel two">
+            <div className="panelHead">
+              <h2 className="panelTitle">AI-generated report</h2>
+              <div className="actionToolbar">
+                <button className="iconBtn" onClick={() => { navigator.clipboard.writeText(report || "") }} title="Copy report"><CopyIcon />Copy</button>
+                <button className="iconBtn" onClick={() => { /* placeholder for export report */ }} title="Export report"><ExportIcon />Export</button>
+              </div>
+            </div>
+
+            <label className="smallLabel">Prompt</label>
+            <textarea
+              className="promptArea"
+              value={prompt}
+              rows={3}
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            {prompt !== DEFAULT_PROMPT && (
+              <button className="linkBtn" onClick={() => setPrompt(DEFAULT_PROMPT)}>
+                Reset to default prompt
+              </button>
+            )}
+            <button
+              className="primaryBtn"
+              style={{ marginTop: 12 }}
+              disabled={isGeneratingReport}
+              onClick={handleGenerateReport}
+            >
+              {isGeneratingReport ? "Generating…" : "Generate report"}
             </button>
-          )}
-          <button
-            className="primaryBtn"
-            style={{ marginTop: 12 }}
-            disabled={isGeneratingReport}
-            onClick={handleGenerateReport}
-          >
-            {isGeneratingReport ? "Generating…" : "Generate report"}
-          </button>
-          {report && <div className="reportBox">{report}</div>}
-        </section>
+            {report && <div className="reportBox">{report}</div>}
+          </section>
+        </div>
       )}
 
       <section className="aboutPanel">
