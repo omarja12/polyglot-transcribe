@@ -1,6 +1,11 @@
 import os
 from typing import Optional
 import re
+import subprocess
+import tempfile
+import shutil
+from pathlib import Path
+import logging
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -9,6 +14,9 @@ from groq import Groq
 from pydantic import BaseModel
 
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 if not GROQ_API_KEY:
@@ -105,6 +113,51 @@ def _transcribe_bytes(audio_bytes: bytes, filename: str, language: Optional[str]
     return result.text
 
 
+def _preprocess_audio_bytes(audio_bytes: bytes, filename: str) -> bytes:
+    """Run ffmpeg preprocessing on uploaded audio bytes and return processed bytes.
+    If ffmpeg is unavailable or processing fails, returns the original bytes.
+    """
+    try:
+        with tempfile.TemporaryDirectory() as td:
+            src_path = Path(td) / (Path(filename).stem + Path(filename).suffix)
+            out_path = Path(td) / (Path(filename).stem + "_prepped.wav")
+            # Write source bytes
+            with open(src_path, "wb") as f:
+                f.write(audio_bytes)
+
+            # Build ffmpeg command: resample to 16k mono, basic denoise, loudness normalize
+            cmd = [
+                "ffmpeg",
+                "-y",
+                "-i",
+                str(src_path),
+                "-af",
+                "highpass=f=100, lowpass=f=8000, afftdn=nf=-25, loudnorm",
+                "-ac",
+                "1",
+                "-ar",
+                "16000",
+                str(out_path),
+            ]
+
+            logger.info("Running ffmpeg preprocessing: %s", " ".join(cmd))
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode != 0:
+                logger.warning("ffmpeg preprocessing failed: %s", res.stderr)
+                return audio_bytes
+
+            with open(out_path, "rb") as f:
+                processed = f.read()
+            logger.info("Preprocessing complete, produced %d bytes", len(processed))
+            return processed
+    except FileNotFoundError:
+        logger.warning("ffmpeg not found; skipping preprocessing")
+        return audio_bytes
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Error during audio preprocessing: %s", exc)
+        return audio_bytes
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -196,10 +249,18 @@ async def transcribe_file(
     estimated_minutes = max(0.5, size_mb)
     _check_and_record_usage(client_id, seconds=estimated_minutes * 60)
 
+    # Attempt server-side preprocessing to improve accuracy on noisy uploads
+    processed_bytes = _preprocess_audio_bytes(audio_bytes, file.filename or "audio.mp3")
+
     try:
-        text = _transcribe_bytes(audio_bytes, file.filename or "audio.mp3", language)
+        text = _transcribe_bytes(processed_bytes, file.filename or "audio.mp3", language)
     except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=502, detail=f"Transcription failed: {exc}") from exc
+        # If transcription of preprocessed audio fails, fall back to original audio
+        logger.warning("Transcription failed on preprocessed audio, retrying original: %s", exc)
+        try:
+            text = _transcribe_bytes(audio_bytes, file.filename or "audio.mp3", language)
+        except Exception as exc2:
+            raise HTTPException(status_code=502, detail=f"Transcription failed: {exc2}") from exc2
 
     return {"text": text}
 

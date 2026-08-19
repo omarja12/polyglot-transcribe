@@ -115,13 +115,15 @@ export default function Home() {
   const startListening = useCallback(async () => {
     setError("");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const constraints: MediaStreamConstraints = { audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints as MediaStreamConstraints);
       streamRef.current = stream;
       listeningRef.current = true;
       setIsListening(true);
       recordLoop();
-    } catch {
-      setError("Microphone access was denied or unavailable.");
+    } catch (err) {
+      console.warn('getUserMedia error', err);
+      setError("Microphone access was denied or unavailable. Try allowing microphone access and ensure no other app is using it.");
     }
   }, [recordLoop]);
 
