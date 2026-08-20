@@ -34,13 +34,15 @@ tooling — end to end, from audio capture in the browser to a deployed, publicl
 
 ## Screenshots
 
-**Upload a file and pick a language**
+A generated share/social preview image and a static snapshot of the built home page are included in the repo for reproducibility and README use.
 
-![Upload screen](screenshots/upload-screen.svg)
+**Share preview**
 
-**Transcript and AI-generated report**
+![Share preview](/share-preview.png)
 
-![Results screen](screenshots/results-screen.svg)
+**Static home page snapshot**
+
+A static HTML snapshot of the production-built home page is included at [scripts/snapshot_home.html](scripts/snapshot_home.html). Open that file in your browser to see the exact rendered markup produced by the production build (useful for capturing screenshots or verifying the static output).
 
 ---
 
