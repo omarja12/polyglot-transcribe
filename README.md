@@ -38,7 +38,7 @@ A generated share/social preview image and a static snapshot of the built home p
 
 **Share preview**
 
-![Share preview](/share-preview.png)
+![Share preview](./frontend/public/share-preview.png)
 
 **Static home page snapshot**
 
